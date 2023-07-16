@@ -1,0 +1,47 @@
+name: data processing
+
+on:
+  push:
+    paths:
+      - rowdata/**/*
+      - code/data_process.py
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install OpenSSL
+      run: sudo apt-get update
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: run python scripts
+      run: |
+        cd code
+        python data_process.py postGOC
+        python data_process.py preGOC
+        python data_process.py paired
+     
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        destination_branch: "main"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: commit
+      run: |
+        git config --global user.email jh2259@mrc-cu.cam.ac.uk
+        git config --global user.name xihajun
+        git add .
+        git commit -m "auto save" -a
+        
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
